@@ -12,14 +12,17 @@ router.get("/signup", (req, res) => {
 });
 
 router.post("/signin", async (req, res) => {
-    const { email, password } = req.body;
-    User.matchPassword(email, password).then((isMatch) => {
-      if (isMatch) {
-        return res.redirect("/");
-      } else {
-        return res.status(401).send("Invalid credentials");
-      }
-    });
+  const { email, password } = req.body;
+
+  try {
+    const token = User.matchPasswordAndGenerateToken(email, password);
+    if (!token) {
+      return res.status(401).send("Invalid credentials");
+    }
+    return res.cookie("token", token).redirect("/");
+  } catch (error) {
+    return res.render("signin", { error: error.message });
+  }
 });
 
 router.post("/signup", async (req, res) => {
